@@ -85,7 +85,15 @@ void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CON
     double root2 = ((-1.0) * equation[1] - sqrt_of_discrim) / (2 * equation[0]);
     // Checking for a root match
     if (RealEqualityDouble(root1, root2)) {
-
+        solution[0] = 1;
+        solution[1] = root1;
+        return;
+    }
+    else {
+        solution[0] = 2;
+        solution[1] = root1;
+        solution[2] = root2;
+        return;
     }
 
 
