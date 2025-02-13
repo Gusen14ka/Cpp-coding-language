@@ -1,4 +1,3 @@
-#pragma warning(disable : 4996)
 #include <array>
 #include <iostream>
 #include <regex>
