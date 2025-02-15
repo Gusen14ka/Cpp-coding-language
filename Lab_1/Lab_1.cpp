@@ -81,7 +81,7 @@ int CountNumberOfNaturalDigits(double n) {
     return digits;
 }
 
-//исправить!!!!
+
 bool RealEqualityDouble(double a, double b) {
     double max_of_two = max(a, b);
     int accuracy = NUM_OF_DIGITS_IN_DOUBLE - CountNumberOfNaturalDigits(max_of_two);
@@ -105,8 +105,8 @@ void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CON
     }
     else {
         solution[0] = 2;
-        solution[1] = root1;
-        solution[2] = root2;
+        solution[1] = min(root1, root2);
+        solution[2] = max(root1, root2);
         return;
     }
 
