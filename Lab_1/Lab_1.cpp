@@ -1,4 +1,3 @@
-#pragma warning(disable : 4996)
 #include <array>
 #include <iostream>
 #include <regex>
@@ -20,12 +19,12 @@ double get_coefficient(const string& str) {
     return stod(str);
 }
 
-bool ReadEquation(array<double, NUM_OF_COEF>& equation) {
+int ReadEquation(array<double, NUM_OF_COEF>& equation) {
     string input;
     cout << "Enter a quadratic equation of the form ax^2+bx+c=0:" << endl;
     getline(cin, input);
     if (input.empty()) {
-        return false;
+        return 1;
     }
 
     regex format_full_eq(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)");
@@ -68,8 +67,9 @@ bool ReadEquation(array<double, NUM_OF_COEF>& equation) {
     }
     else {
         cerr << "The entered equation does not satisfy the format ax^2+bx+c=0" << endl;
+        return 2;
     }
-    return true;
+    return 0;
 }
 
 int CountNumberOfNaturalDigits(double n) {
@@ -131,12 +131,19 @@ void WriteSolution(array<double, CONST_FOR_SOLUTION> solution) {
 int main() {
     array<double, NUM_OF_COEF> equation;
     while (true) {
-        if (not ReadEquation(equation)) {
+        int flag = ReadEquation(equation);
+        if (flag == 1) {
+            cout << "Thanks for using my programm <3!" << endl;
             return 0;
         }
-        array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
-        SolveEquation(equation, solution);
-        WriteSolution(solution);
+        else if (flag == 2) {
+            continue;
+        }
+        else {
+            array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
+            SolveEquation(equation, solution);
+            WriteSolution(solution);
+        } 
     }
     
     
