@@ -5,6 +5,7 @@
 
 
 int const NUM_OF_COEF = 3;
+int const CONST_FOR_SOLUTION = 3;
 
 using namespace std;
 
@@ -57,7 +58,27 @@ void ReadEquation(array<double, NUM_OF_COEF>& equation) {
     }
 }
 
+int CountNumberOfNaturalDigits(double n) {
+    int digits = 1;
+    while (n > 10) {
+        n /= 10.0;
+        digits++;
+    }
+    return digits;
+}
+
+void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CONST_FOR_SOLUTION>& solution) {
+    double discriminant = pow(equation[1],2) - 4 * equation[0] * equation[2];
+    if (discriminant < 0) {
+        solution[0] = 0;
+    }
+        
+}
+
 int main() {
     array<double, NUM_OF_COEF> equation;
     ReadEquation(equation);
+    array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
+    SolveEquation(solution);
+    
 }
