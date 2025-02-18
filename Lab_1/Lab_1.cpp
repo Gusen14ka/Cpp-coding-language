@@ -99,10 +99,26 @@ void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CON
 
 }
 
+void WriteSolution(array<double, CONST_FOR_SOLUTION> solution) {
+    if (solution[0] == 0) {
+        cout << "The eqution has no roots" << endl;
+        return;
+    }
+    else if (solution[0] == 1) {
+        cout << "The eqution has one root:" << solution[1] << endl;
+        return;
+    }
+    else if (solution[0] == 2) {
+        cout << "The eqution has two roots:" << solution[1] << " and " << solution[2] << endl;
+        return;
+    }
+}
+
 int main() {
     array<double, NUM_OF_COEF> equation;
     ReadEquation(equation);
     array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
     SolveEquation(equation, solution);
+    WriteSolution(solution);
     
 }
