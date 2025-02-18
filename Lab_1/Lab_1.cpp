@@ -20,10 +20,13 @@ double get_coefficient(const string& str) {
     return stod(str);
 }
 
-void ReadEquation(array<double, NUM_OF_COEF>& equation) {
+bool ReadEquation(array<double, NUM_OF_COEF>& equation) {
     string input;
     cout << "Enter a quadratic equation of the form ax^2+bx+c=0:" << endl;
     getline(cin, input);
+    if (input.empty()) {
+        return false;
+    }
 
     regex format_full_eq(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)");
     regex format_without_b(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)");
@@ -57,6 +60,7 @@ void ReadEquation(array<double, NUM_OF_COEF>& equation) {
     else {
         cerr << "The entered equation does not satisfy the format ax^2+bx+c=0" << endl;
     }
+    return true;
 }
 
 int CountNumberOfNaturalDigits(double n) {
@@ -68,10 +72,11 @@ int CountNumberOfNaturalDigits(double n) {
     return digits;
 }
 
+
 bool RealEqualityDouble(double a, double b) {
     double max_of_two = max(a, b);
     int accuracy = NUM_OF_DIGITS_IN_DOUBLE - CountNumberOfNaturalDigits(max_of_two);
-    return max_of_two - min(a, b) < accuracy;
+    return max_of_two - min(a, b) < pow(10,-accuracy);
 }
 
 void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CONST_FOR_SOLUTION>& solution) {
@@ -116,9 +121,14 @@ void WriteSolution(array<double, CONST_FOR_SOLUTION> solution) {
 
 int main() {
     array<double, NUM_OF_COEF> equation;
-    ReadEquation(equation);
-    array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
-    SolveEquation(equation, solution);
-    WriteSolution(solution);
+    while (true) {
+        if (not ReadEquation(equation)) {
+            return 0;
+        }
+        array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
+        SolveEquation(equation, solution);
+        WriteSolution(solution);
+    }
+    
     
 }
