@@ -6,6 +6,7 @@
 
 int const NUM_OF_COEF = 3;
 int const CONST_FOR_SOLUTION = 3;
+int const NUM_OF_DIGITS_IN_DOUBLE = 15;
 
 using namespace std;
 
@@ -67,18 +68,33 @@ int CountNumberOfNaturalDigits(double n) {
     return digits;
 }
 
+bool RealEqualityDouble(double a, double b) {
+    double max_of_two = max(a, b);
+    int accuracy = NUM_OF_DIGITS_IN_DOUBLE - CountNumberOfNaturalDigits(max_of_two);
+    return max_of_two - min(a, b) < accuracy;
+}
+
 void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CONST_FOR_SOLUTION>& solution) {
     double discriminant = pow(equation[1],2) - 4 * equation[0] * equation[2];
     if (discriminant < 0) {
         solution[0] = 0;
+        return;
     }
-        
+    double sqrt_of_discrim = pow(discriminant, 0.5);
+    double root1 = ((-1.0) * equation[1] + sqrt_of_discrim) / (2 * equation[0]);
+    double root2 = ((-1.0) * equation[1] - sqrt_of_discrim) / (2 * equation[0]);
+    // Checking for a root match
+    if (RealEqualityDouble(root1, root2)) {
+
+    }
+
+
 }
 
 int main() {
     array<double, NUM_OF_COEF> equation;
     ReadEquation(equation);
     array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
-    SolveEquation(solution);
+    SolveEquation(equation, solution);
     
 }
