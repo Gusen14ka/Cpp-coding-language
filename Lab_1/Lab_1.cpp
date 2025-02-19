@@ -1,14 +1,16 @@
-#pragma warning(disable : 4996)
 #include <array>
 #include <iostream>
 #include <regex>
+#include <fstream>
 
+using namespace std;
 
 int const NUM_OF_COEF = 3;
 int const CONST_FOR_SOLUTION = 3;
 int const NUM_OF_DIGITS_IN_DOUBLE = 15;
+string const EQUATION_PATH = "equation.txt";
+string const ANSWER_PATH = "answer.txt";
 
-using namespace std;
 
 double get_coefficient(const string& str) {
     if (str.empty() || str == "+") {
@@ -22,9 +24,10 @@ double get_coefficient(const string& str) {
 
 bool ReadEquation(array<double, NUM_OF_COEF>& equation) {
     string input;
-    cout << "Enter a quadratic equation of the form ax^2+bx+c=0:" << endl;
-    getline(cin, input);
+    ifstream file_equation(EQUATION_PATH);
+    getline(file_equation, input);
     if (input.empty()) {
+        cerr << "There is nothing in your file" << endl;
         return false;
     }
 
@@ -68,6 +71,7 @@ bool ReadEquation(array<double, NUM_OF_COEF>& equation) {
     }
     else {
         cerr << "The entered equation does not satisfy the format ax^2+bx+c=0" << endl;
+        return false;
     }
     return true;
 }
@@ -114,30 +118,27 @@ void SolveEquation(const array<double, NUM_OF_COEF>& equation, array<double, CON
 }
 
 void WriteSolution(array<double, CONST_FOR_SOLUTION> solution) {
+    ofstream file_answer(ANSWER_PATH);
     if (solution[0] == 0) {
-        cout << "The eqution has no roots" << endl;
+        file_answer << "The eqution has no roots" << endl;
         return;
     }
     else if (solution[0] == 1) {
-        cout << "The eqution has one root:" << solution[1] << endl;
+        file_answer << "The eqution has one root:" << solution[1] << endl;
         return;
     }
     else if (solution[0] == 2) {
-        cout << "The eqution has two roots:" << solution[1] << " and " << solution[2] << endl;
+        file_answer << "The eqution has two roots:" << solution[1] << " and " << solution[2] << endl;
         return;
     }
 }
 
 int main() {
     array<double, NUM_OF_COEF> equation;
-    while (true) {
-        if (not ReadEquation(equation)) {
-            return 0;
-        }
+    if (ReadEquation(equation)) {
         array<double, CONST_FOR_SOLUTION> solution; //The value of an element with the index zero means the number of roots.
         SolveEquation(equation, solution);
         WriteSolution(solution);
     }
-    
-    
+    return 0;
 }
