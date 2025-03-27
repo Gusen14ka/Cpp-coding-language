@@ -6,11 +6,37 @@
 #include <iomanip>
 #include <sstream>
 
+bool RealEqualityDouble(double a, double b) {
+    constexpr double epsilon = 1e-9;
+    return std::abs(a - b) < epsilon;
+}
+
 struct Solution
 {
     int numRoots = NAN;
     double root1 = NAN;
     double root2 = NAN;
+
+    Solution() = default;
+    Solution(int roots, double r1, double r2)
+        : numRoots(roots), root1(r1), root2(r2) {}
+
+    bool isValid() const {
+        if (numRoots < 0 || numRoots > 2)
+            return false;
+
+        switch (numRoots) {
+            case 0:
+                return std::isnan(root1) && std::isnan(root2);
+            case 1:
+                return !std::isnan(root1) && RealEqualityDouble(root1, root2);
+            case 2:
+                return !std::isnan(root1) && !std::isnan(root2) &&
+                    (root1 <= root2);
+            default:
+                return false;
+        }
+    }
 };
 
 struct EquationCoefs
@@ -50,16 +76,18 @@ private:
         return digits;
     }
 
-    bool RealEqualityDouble(double a, double b)
-    {
-        constexpr double epsilon = 1e-9;
-        return std::abs(a - b) < epsilon;
-    }
 
 public:
     EquationCoefs const &getEquation() const { return equation;}
 
     Solution const &getSolution() const { return solution;}
+
+    void setSolution(const Solution& newSolution) {
+        if (!newSolution.isValid()) {
+            throw std::invalid_argument("Invalid solution data");
+        }
+        solution = newSolution;
+    }
 
     void ReadEquation(std::ifstream &file)
     {
@@ -184,6 +212,20 @@ public:
     }
 
     std::string const& getName() const { return name;}
+};
+
+class BadStudent : public Student {
+  public:
+      BadStudent(std::string val) : Student(val) {}
+
+      void DoTask(std::ofstream& file, Equation& equation) {
+          try {
+              equation.setSolution(Solution{1, 0.0, 0.0});
+          } catch (const std::invalid_argument& e) {
+              throw std::invalid_argument(e.what());
+          }
+          WriteAnswer(file, equation);
+      }
 };
 
 int main()
