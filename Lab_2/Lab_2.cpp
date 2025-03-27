@@ -22,8 +22,7 @@ struct EquationCoefs
 
 class Equation
 {
-
-  private:
+private:
     EquationCoefs equation;
     Solution solution;
 
@@ -57,16 +56,10 @@ class Equation
         return std::abs(a - b) < epsilon;
     }
 
-  public:
-    const EquationCoefs &getEquation() const
-    {
-        return equation;
-    }
+public:
+    EquationCoefs const &getEquation() const { return equation;}
 
-    const Solution &getSolution() const
-    {
-        return solution;
-    }
+    Solution const &getSolution() const { return solution;}
 
     void ReadEquation(std::ifstream &file)
     {
@@ -165,9 +158,12 @@ class Equation
 
 class Student
 {
-    std::string Name;
+private:
+    std::string name;
 
-  public:
+public:
+    Student(std::string val) : name(val) {}
+
     void WriteAnswer(std::ofstream &file, Equation& equation)
     {
         std::ostringstream oss;
@@ -183,9 +179,11 @@ class Student
         }
         oss << std::fixed << std::setprecision(9) << coefs.c;
         std::string equationStr = oss.str();
-        file << Name << "|" << equationStr << "|" << solution.numRoots << "|"
+        file << name << "|" << equationStr << "|" << solution.numRoots << "|"
              << solution.root1 << "|" << solution.root2 << std::endl;
     }
+
+    std::string const& getName() const { return name;}
 };
 
 int main()
