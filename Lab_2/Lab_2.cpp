@@ -5,6 +5,7 @@
 #include <regex>
 #include <iomanip>
 #include <sstream>
+#include <random>
 
 bool RealEqualityDouble(double a, double b) {
     constexpr double epsilon = 1e-9;
@@ -226,6 +227,27 @@ class BadStudent : public Student {
           }
           WriteAnswer(file, equation);
       }
+};
+
+class GoodStudent : public Student {
+  private:
+    double probability = 0.5;
+  public:
+    GoodStudent(std::string val) : Student(val) {}
+
+    void DoTask(std::ofstream& file, Equation& equation) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+        if (dist(gen) < probability) {
+            try {
+                equation.setSolution(Solution{1, 0.0, 0.0});
+            } catch (const std::invalid_argument& e) {
+                throw std::invalid_argument(e.what());
+            }
+        }
+        WriteAnswer(file, equation);
+    }
 };
 
 int main()
