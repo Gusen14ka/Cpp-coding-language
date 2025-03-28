@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <sstream>
 #include <random>
+#include <vector>
+#include <unordered_map>
 
 bool RealEqualityDouble(double a, double b) {
     constexpr double epsilon = 1e-9;
@@ -53,7 +55,16 @@ private:
     EquationCoefs equation;
     Solution solution;
 
-    double get_coefficient(const std::string &str)
+    static inline std::regex const format_full_eq{
+        R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)"};
+    static inline std::regex const format_without_b{
+        R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)"};
+    static inline std::regex const format_without_c{
+        R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*=\s*0\s*$)"};
+    static inline std::regex const format_without_b_and_c{
+        R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*=\s*0\s*$)"};
+
+    static double get_coefficient(const std::string &str)
     {
         if (str.empty() || str == "+")
         {
@@ -90,7 +101,7 @@ public:
         solution = newSolution;
     }
 
-    void ReadEquation(std::ifstream &file)
+    void ReadEquationFromFile(std::ifstream &file)
     {
         std::string input;
         getline(file, input);
@@ -100,11 +111,6 @@ public:
             return;
         }
 
-        std::regex format_full_eq(
-            R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)");
-        std::regex format_without_b(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*=\s*0\s*$)");
-        std::regex format_without_c(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*([+-]\d*(?:\.\d*)?)\s*x\s*=\s*0\s*$)");
-        std::regex format_without_b_and_c(R"(^\s*([+-]?\d*(?:\.\d*)?)\s*x\^2\s*=\s*0\s*$)");
         std::smatch match;
 
         if (regex_match(input, match, format_full_eq))
@@ -149,6 +155,18 @@ public:
             return;
         }
         return;
+    }
+
+    static EquationCoefs ReadEquationFromStr(std::string const& eqStr) {
+        EquationCoefs coefs;
+
+        std::smatch match;
+        std::regex_match(eqStr, match, format_full_eq);
+        coefs.a = get_coefficient(match[1].str());
+        coefs.b = get_coefficient(match[2].str());
+        coefs.c = get_coefficient(match[3].str());
+
+        return coefs;
     }
 
     void SolveEquation()
@@ -206,7 +224,7 @@ public:
         if (coefs.c >= 0) {
             oss << "+";
         }
-        oss << std::fixed << std::setprecision(9) << coefs.c;
+        oss << std::fixed << std::setprecision(9) << coefs.c << "=0";
         std::string equationStr = oss.str();
         file << name << "|" << equationStr << "|" << solution.numRoots << "|"
              << solution.root1 << "|" << solution.root2 << std::endl;
@@ -249,6 +267,57 @@ class GoodStudent : public Student {
         WriteAnswer(file, equation);
     }
 };
+
+class Teacher {
+  private:
+    std::vector<Equation> equationsList;
+
+    struct WorkData {
+        std::vector<Solution> solutions;
+        std::vector<EquationCoefs> equations;
+    };
+    std::unordered_map<std::string, WorkData> worksData;
+
+    void ReadWorks(std::ifstream& file) {
+        std::string line;
+        while (std::getline(file, line)) {
+            if (line.empty())
+                continue;
+
+            std::istringstream iss(line);
+            std::string name, equationStr, numRootsStr, root1Str, root2Str;
+
+            if (!std::getline(iss, name, '|') ||
+                !std::getline(iss, equationStr, '|') ||
+                !std::getline(iss, numRootsStr, '|') ||
+                !std::getline(iss, root1Str, '|') ||
+                !std::getline(iss, root2Str)) {
+                continue;
+            }
+
+            int numRoots = std::stoi(numRootsStr);
+            double root1 = std::stod(root1Str);
+            double root2 = std::stod(root2Str);
+
+            EquationCoefs coefs = Equation::ReadEquationFromStr(equationStr);
+
+            Solution sol(numRoots, root1, root2);
+
+            worksData[name].solutions.push_back(sol);
+            worksData[name].equations.push_back(coefs);
+        }
+    }
+  public:
+    Teacher(std::vector<Equation> val) : equationsList(val) {}
+
+    void CheckingWorks(std::ifstream& worksFile, std::ofstream& resultFile) {
+
+    }
+};
+/*
+Идея в том, чтобы сначала решить все уравнения из файла. А далее уже идёт работа классов студентов и учителя.
+Таким образом мы сэкономим время работы и повторение кода - уравнения не будут решаться несколько раз
+*/
 
 int main()
 {
