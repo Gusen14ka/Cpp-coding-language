@@ -278,6 +278,8 @@ class Teacher {
     };
     std::unordered_map<std::string, WorkData> worksData;
 
+    std::unordered_map<std::string, int> studentsProgress;
+
     void readWorks(std::ifstream& file) {
         std::string line;
         while (std::getline(file, line)) {
@@ -307,8 +309,34 @@ class Teacher {
             worksData[name].equations.push_back(coefs);
         }
     }
+
+    bool areCoefsEqual(const EquationCoefs& a, const EquationCoefs& b) {
+        return realEqualityDouble(a.a, b.a) && realEqualityDouble(a.b, b.b) &&
+            realEqualityDouble(a.c, b.c);
+    }
+
+    // Функция для сравнения двух решений
+    bool isSolutionsEqual(const Solution& correct, const Solution& student) {
+        if (!student.isValid())
+            return false;
+        if (correct.numRoots != student.numRoots)
+            return false;
+
+        switch (correct.numRoots) {
+            case 0:
+                return true;
+            case 1:
+                return realEqualityDouble(correct.root1, student.root1);
+            case 2:
+                return realEqualityDouble(correct.root1, student.root1) &&
+                    realEqualityDouble(correct.root2, student.root2);
+            default:
+                return false;
+        }
+    }
+
   public:
-    Teacher(std::vector<Equation> val) : equationsList(val) {}
+    //Teacher(std::vector<Equation> val) : equationsList(val) {}
 
     std::vector<Equation> const& getEquations() const { return equationsList; }
 
@@ -334,6 +362,28 @@ class Teacher {
 
     void checkingWorks(std::ifstream& worksFile, std::ofstream& resultFile) {
         readWorks(worksFile);
+        for (auto& [studentName, workData] : worksData) {
+            int correctAnswers = 0;
+
+            for (size_t i = 0; i < workData.equations.size(); ++i) {
+                const EquationCoefs& studentCoefs = workData.equations[i];
+                const Solution& studentSolution = workData.solutions[i];
+
+                auto it = find_if(equationsList.begin(), equationsList.end(),
+                    [&](const Equation& eq) {
+                        return areCoefsEqual(eq.getEquation(), studentCoefs);
+                    });
+
+                if (it != equationsList.end()) {
+                    const Solution& referenceSolution = it->getSolution();
+                    if (isSolutionsEqual(referenceSolution, studentSolution)) {
+                        correctAnswers++;
+                    }
+                }
+            }
+
+            // Обновляем прогресс студента
+            studentsProgress[studentName] = correctAnswers;
     }
 };
 /*
