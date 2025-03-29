@@ -231,13 +231,20 @@ public:
     }
 
     std::string const& getName() const { return name;}
+
+    virtual void doTask(std::ofstream& file, Equation const &equationOrigin) {
+        Equation equation = equationOrigin;
+        writeAnswer(file, equation);
+    }
 };
 
 class BadStudent : public Student {
   public:
       BadStudent(std::string val) : Student(val) {}
 
-      void doTask(std::ofstream& file, Equation& equation) {
+      void doTask(
+          std::ofstream& file, Equation const& equationOrigin) override {
+          Equation equation = equationOrigin;
           try {
               equation.setSolution(Solution{1, 0.0, 0.0});
           } catch (const std::invalid_argument& e) {
@@ -253,7 +260,8 @@ class GoodStudent : public Student {
   public:
     GoodStudent(std::string val) : Student(val) {}
 
-    void doTask(std::ofstream& file, Equation& equation) {
+    void doTask(std::ofstream& file, Equation const& equationOrigin) override {
+        Equation equation = equationOrigin;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -335,6 +343,14 @@ class Teacher {
         }
     }
 
+    void writeResults(std::ofstream& file) {
+        int numEq = (int)equationsList.size();
+        for (auto const& [studentName, studentResult] : studentsProgress) {
+            file << studentName << "|" << studentResult << "/" << numEq
+                 << std::endl;
+        }
+    }
+
   public:
     //Teacher(std::vector<Equation> val) : equationsList(val) {}
 
@@ -357,6 +373,16 @@ class Teacher {
                         std::to_string(line_number) + ": " + e.what());
                 }
             }
+        }
+    }
+
+    void solveEquations() {
+        try {
+            for (auto& eq : equationsList) {
+                eq.solveEquation();
+            }
+        } catch(std::runtime_error e) {
+            throw std::runtime_error(e.what());
         }
     }
 
@@ -384,6 +410,8 @@ class Teacher {
 
             // Обновляем прогресс студента
             studentsProgress[studentName] = correctAnswers;
+        }
+        writeResults(resultFile);
     }
 };
 /*
@@ -393,7 +421,36 @@ class Teacher {
 Можно добавить в учителя список Equation и метод работы с ними. Условно говоря тоже самое что раньше, но только список уравнений будет лежать внутри учителя
 */
 
-int main()
-{
-    Equation student;
+int main() { 
+    std::ifstream equationsFile("equations.txt");
+    std::ofstream studentsWorkFile("studentWork.txt");
+
+    Teacher halidov;
+    std::vector<std::unique_ptr<Student>> students;
+    students.push_back(std::make_unique<Student>("Nastya"));
+    students.push_back(std::make_unique<GoodStudent>("Gleb"));
+    students.push_back(std::make_unique<BadStudent>("Kolya"));
+
+    try {
+        halidov.recordEquations(equationsFile);
+        halidov.solveEquations();
+        for (auto& eq : halidov.getEquations()) {
+            for (auto& student : students) {
+                student->doTask(studentsWorkFile, eq);
+            }
+        }
+        equationsFile.close();
+        studentsWorkFile.close();
+        std::ifstream studentWorkFileRead("studentWork.txt");
+        std::ofstream resultFile("results.txt");
+        halidov.checkingWorks(studentWorkFileRead, resultFile);
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    } catch (const std::invalid_argument& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+    
+    return 0;
 }
