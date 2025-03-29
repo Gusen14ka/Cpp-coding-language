@@ -9,7 +9,7 @@
 #include <vector>
 #include <unordered_map>
 
-bool RealEqualityDouble(double a, double b) {
+bool realEqualityDouble(double a, double b) {
     constexpr double epsilon = 1e-9;
     return std::abs(a - b) < epsilon;
 }
@@ -32,7 +32,7 @@ struct Solution
             case 0:
                 return std::isnan(root1) && std::isnan(root2);
             case 1:
-                return !std::isnan(root1) && RealEqualityDouble(root1, root2);
+                return !std::isnan(root1) && realEqualityDouble(root1, root2);
             case 2:
                 return !std::isnan(root1) && !std::isnan(root2) &&
                     (root1 <= root2);
@@ -77,7 +77,7 @@ private:
         return stod(str);
     }
 
-    int CountNumberOfNaturalDigits(double n)
+    int countNumberOfNaturalDigits(double n)
     {
         int digits = 1;
         while (n > 10)
@@ -101,7 +101,7 @@ public:
         solution = newSolution;
     }
 
-    void ReadEquationFromFile(std::ifstream &file)
+    void readEquationFromFile(std::ifstream &file)
     {
         std::string input;
         getline(file, input);
@@ -157,7 +157,7 @@ public:
         return;
     }
 
-    static EquationCoefs ReadEquationFromStr(std::string const& eqStr) {
+    static EquationCoefs readEquationFromStr(std::string const& eqStr) {
         EquationCoefs coefs;
 
         std::smatch match;
@@ -169,7 +169,7 @@ public:
         return coefs;
     }
 
-    void SolveEquation()
+    void solveEquation()
     {
         if (std::isnan(equation.a) || std::isnan(equation.b) || std::isnan(equation.c))
         {
@@ -186,7 +186,7 @@ public:
         double root1 = ((-1.0) * equation.b + sqrt_of_discrim) / (2 * equation.a);
         double root2 = ((-1.0) * equation.b - sqrt_of_discrim) / (2 * equation.a);
         // Checking for a root match
-        if (RealEqualityDouble(root1, root2))
+        if (realEqualityDouble(root1, root2))
         {
             solution.numRoots = 1;
             solution.root1 = root1;
@@ -211,7 +211,7 @@ private:
 public:
     Student(std::string val) : name(val) {}
 
-    void WriteAnswer(std::ofstream &file, Equation& equation)
+    void writeAnswer(std::ofstream &file, Equation& equation)
     {
         std::ostringstream oss;
         EquationCoefs coefs = equation.getEquation();
@@ -237,13 +237,13 @@ class BadStudent : public Student {
   public:
       BadStudent(std::string val) : Student(val) {}
 
-      void DoTask(std::ofstream& file, Equation& equation) {
+      void doTask(std::ofstream& file, Equation& equation) {
           try {
               equation.setSolution(Solution{1, 0.0, 0.0});
           } catch (const std::invalid_argument& e) {
               throw std::invalid_argument(e.what());
           }
-          WriteAnswer(file, equation);
+          writeAnswer(file, equation);
       }
 };
 
@@ -253,7 +253,7 @@ class GoodStudent : public Student {
   public:
     GoodStudent(std::string val) : Student(val) {}
 
-    void DoTask(std::ofstream& file, Equation& equation) {
+    void doTask(std::ofstream& file, Equation& equation) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -264,7 +264,7 @@ class GoodStudent : public Student {
                 throw std::invalid_argument(e.what());
             }
         }
-        WriteAnswer(file, equation);
+        writeAnswer(file, equation);
     }
 };
 
@@ -278,7 +278,7 @@ class Teacher {
     };
     std::unordered_map<std::string, WorkData> worksData;
 
-    void ReadWorks(std::ifstream& file) {
+    void readWorks(std::ifstream& file) {
         std::string line;
         while (std::getline(file, line)) {
             if (line.empty())
@@ -299,7 +299,7 @@ class Teacher {
             double root1 = std::stod(root1Str);
             double root2 = std::stod(root2Str);
 
-            EquationCoefs coefs = Equation::ReadEquationFromStr(equationStr);
+            EquationCoefs coefs = Equation::readEquationFromStr(equationStr);
 
             Solution sol(numRoots, root1, root2);
 
@@ -310,13 +310,37 @@ class Teacher {
   public:
     Teacher(std::vector<Equation> val) : equationsList(val) {}
 
-    void CheckingWorks(std::ifstream& worksFile, std::ofstream& resultFile) {
+    std::vector<Equation> const& getEquations() const { return equationsList; }
 
+    void recordEquations(std::ifstream& equationsFile) {
+        int line_number = 0;
+
+        while (!equationsFile.eof()) {
+            line_number++;
+            try {
+                Equation equation;
+                equation.readEquationFromFile(equationsFile);
+                equationsList.push_back(equation);
+            } catch (const std::runtime_error& e) {
+                if (std::string(e.what()) == "Empty file") {
+                    continue;
+                } else {
+                    throw std::runtime_error("Error on line " +
+                        std::to_string(line_number) + ": " + e.what());
+                }
+            }
+        }
+    }
+
+    void checkingWorks(std::ifstream& worksFile, std::ofstream& resultFile) {
+        readWorks(worksFile);
     }
 };
 /*
 »де€ в том, чтобы сначала решить все уравнени€ из файла. ј далее уже идЄт работа классов студентов и учител€.
 “аким образом мы сэкономим врем€ работы и повторение кода - уравнени€ не будут решатьс€ несколько раз
+
+ћожно добавить в учител€ список Equation и метод работы с ними. ”словно говор€ тоже самое что раньше, но только список уравнений будет лежать внутри учител€
 */
 
 int main()
