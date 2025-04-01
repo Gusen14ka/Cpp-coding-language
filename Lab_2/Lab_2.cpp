@@ -227,7 +227,8 @@ public:
         oss << std::fixed << std::setprecision(9) << coefs.c << "=0";
         std::string equationStr = oss.str();
         file << name << "|" << equationStr << "|" << solution.numRoots << "|"
-             << solution.root1 << "|" << solution.root2 << std::endl;
+             << std::fixed << std::setprecision(9) << solution.root1 << "|"
+             << solution.root2 << std::endl;
     }
 
     std::string const& getName() const { return name;}
