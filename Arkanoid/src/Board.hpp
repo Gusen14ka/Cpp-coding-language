@@ -2,7 +2,12 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
-#include "entities/Block.hpp"
+#include "entities/blocks/Block.hpp"
+#include "entities/blocks/StandartBlock.hpp"
+#include "entities/blocks/MultiHPBlock.hpp"
+#include "entities/blocks/IndestructibleBlock.hpp"
+#include "entities/blocks/SpeedUpBlock.hpp"
+#include "entities/blocks/BonusBlock.hpp"
 #include "entities/Ball.hpp"
 #include "Pos.hpp"
 #include "EnumTypes.hpp"
@@ -26,13 +31,8 @@ public:
     static constexpr int COLS = 12;
 
 
-    Board() {
-        // инициализируем пустую матрицу
-        indexGrid_.assign(ROWS, std::vector<int>(COLS, -1));
-    }
+    Board();
 
-    /// Заполнить доску стандартным макетом (например, 12×8 зелёных блоков)
-    void generateDefault();
 
     /// Загрузить уровень из текстового файла (матрица целых чисел)
     void loadFromFile(const std::string& filename);
@@ -55,7 +55,7 @@ public:
 
 private:
     std::vector<std::vector<int>> indexGrid_;  // размер rows×cols: -1 или индекс в blocks_
-    std::vector<Block> blocks_;
+    std::vector<std::unique_ptr<Block>> blocks_;
 
     // Перевод логической позиции → пиксели
     sf::Vector2f logicalToPx(const Pos& pos) const;

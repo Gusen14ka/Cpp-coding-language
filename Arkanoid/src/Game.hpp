@@ -5,7 +5,7 @@
 #include "Board.hpp"
 #include "entities/Ball.hpp"
 #include "entities/Paddle.hpp"
-#include "entities/Block.hpp"
+#include "entities/blocks/Block.hpp"
 #include "entities/bonuses/ExpandPaddleBonus.hpp"
 #include "entities/bonuses/CompressPaddleBonus.hpp"
 #include "entities/bonuses/SlowBallBonus.hpp"

@@ -1,14 +1,15 @@
-#pragma once
+п»ї#pragma once
 
-// Типы блоков
+// РўРёРїС‹ Р±Р»РѕРєРѕРІ
 enum class BlockType {
-	Standard,
-	Indestructible,
-	SpeedUp,
-	MultiHP
+	Standard = 0,
+	Indestructible = 1,
+	SpeedUp = 2,
+	MultiHP = 3,
+	WithBonus =4
 };
 
-// Возможные бонусы
+// Р’РѕР·РјРѕР¶РЅС‹Рµ Р±РѕРЅСѓСЃС‹
 enum class BonusType {
 	ExpandPaddle,
 	CompressPaddle,
@@ -19,7 +20,7 @@ enum class BonusType {
 	RandomBounce
 };
 
-// Цвета блоков
+// Р¦РІРµС‚Р° Р±Р»РѕРєРѕРІ
 enum class BlockColor {
 	Green = 0,
 	Red = 1, // MultiHP

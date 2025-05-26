@@ -3,104 +3,75 @@
 #include <sstream>
 #include <iostream>
 
-void Board::generateDefault() {
-	blocks_.clear();
 
-	for (int row = 0; row < ROWS; row++) {
-		for (int col = 0; col < COLS; col++) {
-            Pos pos{ row, col };
-            // Конструктор: logicalPos, pxPos, type, width, height, hp, бонус, speedMul
-            blocks_.emplace_back(
-                pos,
-                logicalToPx(pos),
-				BlockType::Standard,
-                BlockColor::Green,
-                BLOCK_WIDTH,
-                BLOCK_HEIGHT
-			);
-		} 
-	}
-    rebuildIndexGrid();
+Board::Board() {
+    // инициализируем пустую сетку
+    indexGrid_.assign(ROWS, std::vector<int>(COLS, -1));
 }
 
 sf::Vector2f Board::logicalToPx(const Pos& pos) const {
-	return { pos.col * BLOCK_WIDTH, OFFSET_Y_TOP + pos.row * BLOCK_HEIGHT };
+	return { pos.col * BLOCK_WIDTH,
+        OFFSET_Y_TOP + pos.row * BLOCK_HEIGHT };
 }
 
 void Board::loadFromFile(const std::string& filename) {
     blocks_.clear();
-    indexGrid_.assign(ROWS, std::vector<int>(COLS, -1));
+    for (auto& row : indexGrid_)
+        std::fill(row.begin(), row.end(), -1);
 
     std::ifstream file(filename);
-    if (!file) {
-        throw std::runtime_error("Cannot open level file: " + filename);
-    }
+    if (!file) throw std::runtime_error("Cannot open level file: " + filename);
 
     std::string line;
     int row = 0;
     while (row < ROWS && std::getline(file, line)) {
-        std::istringstream lineStream(line);
+        std::istringstream ls(line);
         std::string token;
         int col = 0;
-
-        // читаем токены
-        while (col < COLS && (lineStream >> token)) {
-            if (token.size() < 7 || token.front() != '(' || token.back() != ')') {
-                throw std::runtime_error("Bad block syntax: " + token);
-            }
-            std::istringstream tokenStream(token);
-
+        while (col < COLS && (ls >> token)) {
+            if (token.front() != '(' || token.back() != ')')
+                throw std::runtime_error("Bad syntax: " + token);
+            std::istringstream ts(token.substr(1, token.size() - 2));
             int typeInt, colorInt, bonusInt;
-            char ch;
-            tokenStream >> std::ws >> ch;            // '('
-            tokenStream >> std::ws >> typeInt;
-            tokenStream >> std::ws >> ch;            // ','
-            tokenStream >> std::ws >> colorInt;
-            tokenStream >> std::ws >> ch;            // ','
-            tokenStream >> std::ws >> bonusInt;
-            tokenStream >> std::ws >> ch;            // ')'
-            if (tokenStream.fail()) {
-                throw std::runtime_error("Bad block syntax: " + token);
+            char c1, c2;
+            ts >> typeInt >> c1 >> colorInt >> c2 >> bonusInt;
+            if (ts.fail() || c1 != ',' || c2 != ',')
+                throw std::runtime_error("Bad syntax: " + token);
+
+            if (typeInt >= 0) {
+                Pos p{ row,col };
+                auto px = logicalToPx(p);
+                std::unique_ptr<Block> blk;
+                switch (static_cast<BlockType>(typeInt)) {
+                case BlockType::Standard:
+                    blk = std::make_unique<StandardBlock>(p, px, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    break;
+                case BlockType::MultiHP:
+                    blk = std::make_unique<MultiHPBlock>(p, px, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    break;
+                case BlockType::Indestructible:
+                    blk = std::make_unique<IndestructibleBlock>(p, px, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    break;
+                case BlockType::SpeedUp:
+                    blk = std::make_unique<SpeedUpBlock>(p, px, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    break;
+                case BlockType::WithBonus:
+                    blk = std::make_unique<BonusBlock>(
+                        static_cast<BonusType>(bonusInt),
+                        p, px, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    break;
+                default:
+                    throw std::runtime_error("Unknown block type");
+                }
+                indexGrid_[row][col] = (int)blocks_.size();
+                blocks_.push_back(std::move(blk));
             }
-            if (typeInt < 0) {
-                col++;
-                continue;
-            }
-
-            BlockType type = static_cast<BlockType>(typeInt);
-            BlockColor color = static_cast<BlockColor>(colorInt);
-            std::optional<BonusType> bonus = (bonusInt >= 0 
-                ? std::optional<BonusType>{static_cast<BonusType>(bonusInt)}
-                : std::nullopt);
-
-            Pos pos{ row, col };
-            sf::Vector2f pxPos = logicalToPx(pos);
-            int hp = (type == BlockType::MultiHP ? 3 : 1);
-
-            blocks_.emplace_back(
-                pos,
-                pxPos,
-                type,
-                color,
-                BLOCK_WIDTH,
-                BLOCK_HEIGHT,
-                hp,
-                bonus
-            );
-            col++;
+            ++col;
         }
-
-        if (col != COLS) {
-            throw std::runtime_error("Row " + std::to_string(row) +
-                " has wrong block count: " + std::to_string(col));
-        }
-        row++;
+        if (col != COLS) throw std::runtime_error("Wrong cols in row " + std::to_string(row));
+        ++row;
     }
-
-    if (row != ROWS) {
-        throw std::runtime_error("Level file has wrong row count: " + std::to_string(row));
-    }
-
+    if (row != ROWS) throw std::runtime_error("Wrong row count: " + std::to_string(row));
     rebuildIndexGrid();
 }
 
@@ -111,14 +82,14 @@ void Board::rebuildIndexGrid() {
 
     // Для каждого блока запомним его индекс
     for (int i = 0; i < (int)blocks_.size(); ++i) {
-        const Pos p = blocks_[i].getLogicalPos();
+        const Pos p = blocks_[i]->getLogicalPos();
         indexGrid_[p.row][p.col] = i;
     }
 }
 
 bool Board::isCleared() const {
     for (const auto& b : blocks_) {
-        if (!b.isDestroyed() && !b.isIndestructible())
+        if (!b->isDestroyed() && !b->isIndestructible())
             return false;
     }
     return true;
@@ -127,15 +98,15 @@ bool Board::isCleared() const {
 void Board::reset() {
     // Восстанавливаем каждый блок
     for (auto& b : blocks_)
-        b.reset();
+        b->reset();
     // Восстанавливаем матрицу индексов
     rebuildIndexGrid();
 }
 
 void Board::draw(sf::RenderWindow& window) const {
     for (const auto& b : blocks_) {
-        if (!b.isDestroyed())
-            b.draw(window);
+        if (!b->isDestroyed())
+            b->draw(window);
     }
 }
 
@@ -173,8 +144,8 @@ std::optional<std::pair<std::optional<BonusType>, sf::Vector2f>> Board::handleBa
                 continue;
             }
 
-            Block& block = blocks_[idx];
-            sf::FloatRect blockBounds = block.getBounds();
+            auto& block = blocks_[idx];
+            auto blockBounds = block->getBounds();
             if (!ball.getBounds().intersects(blockBounds))
                 continue;
             auto [normal, pen] = computeCollisionCircleAABB(
@@ -194,16 +165,20 @@ std::optional<std::pair<std::optional<BonusType>, sf::Vector2f>> Board::handleBa
     ball.reflect(resultNormal);
     ball.setPosition(ballCenter + resultNormal * (resultPenetration + 0.1f));
 
-    Block& block = blocks_[resultIdx];
-    if (block.hit(ball)) {
-        indexGrid_[resultLogicalPos.row][resultLogicalPos.col] = -1;
-        std::optional<BonusType> bonus = block.getBonus();
-        if (bonus.has_value()) {
-            return std::make_optional(std::make_pair(bonus, block.getPxPosition()));
-        }
-        else {
-            return std::make_optional(std::make_pair(std::nullopt, block.getPxPosition()));
-        }
+    auto bonus = blocks_[resultIdx]->onHit(ball);
+    if (blocks_[resultIdx]->isIndestructible()) {
+        return std::nullopt;
     }
-    return std::nullopt;
+    if (blocks_[resultIdx]->isDestroyed())
+        indexGrid_[resultLogicalPos.row][resultLogicalPos.col] = -1;
+
+    sf::Vector2f topLeft = blocks_[resultIdx]->getPxPosition();
+
+    // Размер блока (константы Board::BLOCK_WIDTH/HEIGHT)
+    constexpr float w = Board::BLOCK_WIDTH, h = Board::BLOCK_HEIGHT;
+
+    // Центр блока — вниз-вправо на половину размера
+    sf::Vector2f center{ topLeft.x + w / 2.f, topLeft.y + h / 2.f };
+
+    return std::make_optional(std::make_pair(bonus, center));
 }

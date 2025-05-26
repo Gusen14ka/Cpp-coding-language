@@ -12,7 +12,7 @@ Game::Game() :
 {
     window_.setFramerateLimit(60);
     // загружаем карту уровня
-    board_.loadFromFile("maps/test_bonus_compress.txt");
+    board_.loadFromFile("maps/level2.txt");
     // загружаем спрайты для бонусов
     ResourceHolder::loadBonusTexture("assets");
     ResourceHolder::loadFont("assets/gomarice_no_continue.ttf");
