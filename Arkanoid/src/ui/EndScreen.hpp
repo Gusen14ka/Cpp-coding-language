@@ -1,16 +1,19 @@
-#pragma once
-#include <SFML/Graphics.hpp>
+﻿#pragma once
+#include "Screen.hpp"
 #include "Button.hpp"
 
-class EndScreen {
+class EndScreen : public Screen {
 public:
     EndScreen(const sf::Vector2u& win);
 
-    // ���������� ��������� ����
+    // Установить финальный счёт
     void setScore(int score);
 
-    void draw(sf::RenderWindow& w);
-    bool handleEvent(const sf::Event& ev);
+    // Рисует окно завершения игры
+    void draw(sf::RenderWindow& w) override;
+
+    // Возвращает true, если кликнули по кнопке "Retry"
+    bool handleEvent(const sf::Event& ev) override;
 
 private:
     sf::RectangleShape backdrop_;

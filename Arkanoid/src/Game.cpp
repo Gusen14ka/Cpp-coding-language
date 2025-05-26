@@ -12,14 +12,14 @@ Game::Game() :
 {
     window_.setFramerateLimit(60);
     // загружаем карту уровня
-    board_.loadFromFile("maps/level1.txt");
+    board_.loadFromFile("maps/test_bonus_compress.txt");
     // загружаем спрайты для бонусов
     ResourceHolder::loadBonusTexture("assets");
     ResourceHolder::loadFont("assets/gomarice_no_continue.ttf");
     ResourceHolder::loadHeartTexture("assets/heartSprite.png");
 
-    startScreen_ = new StartScreen(window_.getSize());
-    endScreen_ = new EndScreen(window_.getSize());
+    startScreen_ = std::make_unique<StartScreen>(window_.getSize());
+    endScreen_ = std::make_unique<EndScreen>(window_.getSize());
 
     initFloor();
     state_ = GameState::Start;
@@ -59,8 +59,40 @@ void Game::updateSate(float dt) {
 
     // Столкновения шар - блоки
     if (auto opt = board_.handleBallCollision(ball_)) {
-        if (opt->first.has_value()) {
-            bonuses_.emplace_back(opt->first.value(), opt->second);
+        if (auto bt = opt->first) {
+            const sf::Vector2f pos = opt->second;
+            switch (*bt) {
+            case BonusType::ExpandPaddle:
+                bonuses_.push_back(
+                    std::make_unique<ExpandPaddleBonus>(paddle_, pos));
+                break;
+            case BonusType::CompressPaddle:
+                bonuses_.push_back(
+                    std::make_unique<CompressPaddleBonus>(paddle_, pos));
+                break;
+            case BonusType::SlowBall:
+                bonuses_.push_back(
+                    std::make_unique<SlowBallBonus>(ball_, pos));
+                break;
+            case BonusType::FastBall:
+                bonuses_.push_back(
+                    std::make_unique<FastBallBonus>(ball_, pos));
+                break;
+            case BonusType::StickyPaddle:
+                bonuses_.push_back(
+                    std::make_unique<StickyPaddleBonus>(paddle_, pos));
+                break;
+            case BonusType::OneTimeFloor:
+                bonuses_.push_back(
+                    std::make_unique<OneTimeFloorBonus>(*this, pos));
+                break;
+            case BonusType::RandomBounce:
+                bonuses_.push_back(
+                    std::make_unique<RandomBounceBonus>(ball_, pos));
+                break;
+            default:
+                break;
+            }
         }
         score_ += 10;
     }
@@ -103,24 +135,22 @@ void Game::updateSate(float dt) {
 
     // Обновляем и ловим + применяем бонусы
     for (auto it = bonuses_.begin(); it != bonuses_.end();) {
-        it->update(dt);
-        if (it->getBounds().intersects(paddle_.getBounds())) {
-            applyBonus(it->getBonusType());
+        (*it)->update(dt);
+        if ((*it)->getBounds().intersects(paddle_.getBounds())) {
+            (*it)->apply();
             it = bonuses_.erase(it);
         }
-        else if (it->getPosition().y - Bonus::SIZE / 2 > WINDOW_HEIGHT) {
+        else if ((*it)->getPosition().y - Bonus::SIZE / 2 > WINDOW_HEIGHT) {
             it = bonuses_.erase(it);
         }
         else {
-            it++;
+            ++it;
         }
     }
 
     // Проверка на конец игры
     if (board_.isCleared()) {
         state_ = GameState::End;
-        // чтобы показать финальный счёт на экране
-        endScreen_->setScore(score_);
         return; // прекращаем дальнейший апдейт
     }
 
@@ -182,7 +212,7 @@ void Game::render() {
 
         board_.draw(window_);
         for (auto const& bonus : bonuses_) {
-            bonus.draw(window_);
+            bonus->draw(window_);
         }
         if (oneTimefloorActive_) {
             window_.draw(floorShape_);
@@ -192,7 +222,7 @@ void Game::render() {
         break;
     }
     case GameState::End:
-        endScreen_->setScore(score_);
+        static_cast<EndScreen*>(endScreen_.get())->setScore(score_);
         endScreen_->draw(window_);
         break;
     default:
@@ -248,43 +278,12 @@ void Game::processInput() {
     }
 }
 
-void Game::applyBonus(const BonusType& type) {
-    switch (type)
-    {
-    case BonusType::ExpandPaddle:
-        paddle_.multiplyWidth(1.45f);
-        break;
-    case BonusType::CompressPaddle:
-        paddle_.multiplyWidth(0.67f);
-        break;
-    case BonusType::SlowBall:
-        if (!paddle_.hasStuckBall()) {
-            ball_.multiplyVelocity(0.8f);
-        }
-        break;
-    case BonusType::FastBall:
-        if (!paddle_.hasStuckBall()) {
-            ball_.multiplyVelocity(1.3f);
-        }
-        break;
-    case BonusType::StickyPaddle:
-        paddle_.enableSticky();
-        break;
-    case BonusType::OneTimeFloor:
-        oneTimefloorActive_ = true;
-        break;
-    case BonusType::RandomBounce:
-        if (!paddle_.hasStuckBall()) {
-            ball_.scheduleRandBounce(1.f);
-        }
-        break;
-    default:
-        break;
-    }
-}
-
 void Game::initFloor() {
     floorShape_.setSize({ float(WINDOW_WIDTH), FLOOR_HEIGHT });
     floorShape_.setFillColor(sf::Color(100, 100, 100));
     floorShape_.setPosition(0.f, WINDOW_HEIGHT - FLOOR_HEIGHT);
+}
+
+void Game::activateOneTimeFloor() {
+    oneTimefloorActive_ = true;
 }

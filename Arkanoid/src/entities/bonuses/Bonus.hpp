@@ -1,36 +1,38 @@
-#pragma once
+п»ї#pragma once
 #include <SFML/Graphics.hpp>
-#include "EnumTypes.hpp"
-#include "ResourceHolder.hpp"
+//#include "ResourceHolder.hpp"
+
+
 
 class Bonus {
 public:
-	// Скорость падения бонуса
+	// РЎРєРѕСЂРѕСЃС‚СЊ РїР°РґРµРЅРёСЏ Р±РѕРЅСѓСЃР°
 	static constexpr float FALL_SPEED = 150.f;
 
-	// Размер бонусов
+	// Р Р°Р·РјРµСЂ Р±РѕРЅСѓСЃРѕРІ
 	static constexpr float SIZE = 50.f;
 
-	// Конструктор: тип бонуса и стартовая позиция центра 
-	Bonus(BonusType type, const sf::Vector2f& startPos);
+	// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ: СЃС‚Р°СЂС‚РѕРІР°СЏ РїРѕР·РёС†РёСЏ С†РµРЅС‚СЂР° 
+	explicit Bonus(const sf::Vector2f& pos);
 
-	// Логика падения
+	virtual ~Bonus() = default;
+
+	// Р›РѕРіРёРєР° РїР°РґРµРЅРёСЏ
 	void update(float dt);
 
-	// Отрисовывает бонус
+	// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ Р±РѕРЅСѓСЃ
 	void draw(sf::RenderWindow& window) const;
 
-	// Геттер границ для коллизии
+	// Р“РµС‚С‚РµСЂ РіСЂР°РЅРёС† РґР»СЏ РєРѕР»Р»РёР·РёРё
 	sf::FloatRect getBounds() const;
 
-	// Геттер текущей позиции
+	// Р“РµС‚С‚РµСЂ С‚РµРєСѓС‰РµР№ РїРѕР·РёС†РёРё
 	sf::Vector2f getPosition() const;
 
-	// Геттер типа бонуса
-	BonusType getBonusType() const;
+	// Р’С‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё Р»РѕРІР»Рµ, РѕРїСЂРµРґРµР»РµРЅРёРµ РІ РЅР°СЃР»РµРґРЅРёРєР°С…
+	virtual void apply() = 0;
 
-private:
-	BonusType type_;
+protected:
 	sf::Sprite sprite_;
 
 };

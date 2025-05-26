@@ -1,17 +1,17 @@
-#pragma once
-#include <SFML/Graphics.hpp>
+п»ї#pragma once
+#include "Screen.hpp"
 #include "ResourceHolder.hpp"
 #include "Button.hpp"
 
-class StartScreen {
+class StartScreen: public Screen {
 public:
     StartScreen(const sf::Vector2u& winSize);
 
-    // Рисует окно старта игры
-    void draw(sf::RenderWindow& w);
+    // Р РёСЃСѓРµС‚ РѕРєРЅРѕ СЃС‚Р°СЂС‚Р° РёРіСЂС‹
+    void draw(sf::RenderWindow& w) override;
 
-    // Возвращает true, если кликнули по кнопке «Play»
-    bool handleEvent(const sf::Event& ev);
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ true, РµСЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ РєРЅРѕРїРєРµ В«PlayВ»
+    bool handleEvent(const sf::Event& ev) override;
 
 private:
     sf::RectangleShape backdrop_;

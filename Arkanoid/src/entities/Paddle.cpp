@@ -1,4 +1,4 @@
-#include "Paddle.hpp"
+п»ї#include "Paddle.hpp"
 
 Paddle::Paddle(const sf::Vector2f& pos) {
 	shape_.setSize({ WIDTH, HEIGHT });
@@ -33,12 +33,12 @@ void Paddle::handleEvent(const sf::Event& event,
 	else if (dragging_ && event.type == sf::Event::MouseMoved) {
 		float mouseX = static_cast<float>(event.mouseMove.x);
 
-		float half = WIDTH / 2.f;
+		float half = (shape_.getSize().x * shape_.getScale().x)/ 2.f;
 		float dx = mouseX - lastMouseX_;
 		lastMouseX_ = mouseX;
 		position_.x += dx;
 
-		// проверяем на переход границ окна
+		// РїСЂРѕРІРµСЂСЏРµРј РЅР° РїРµСЂРµС…РѕРґ РіСЂР°РЅРёС† РѕРєРЅР°
 		if (position_.x - half < 0.f) {
 			position_.x = half;
 		}
@@ -94,12 +94,12 @@ void Paddle::multiplyWidth(float multiplier) {
 		shape_.setFillColor(baseColor_);
 	}
 
-	//    пересчитываем offset и позицию шарика
+	//    РїРµСЂРµСЃС‡РёС‚С‹РІР°РµРј offset Рё РїРѕР·РёС†РёСЋ С€Р°СЂРёРєР°
 	if (stuckBall_) {
 		Ball& ball = stuckBall_->get();
-		// новый отступ по X от центра платформы
+		// РЅРѕРІС‹Р№ РѕС‚СЃС‚СѓРї РїРѕ X РѕС‚ С†РµРЅС‚СЂР° РїР»Р°С‚С„РѕСЂРјС‹
 		stickOffsetX_ = ball.getPosition().x - position_.x;
-		// и сразу возвращаем шар на правильную позицию
+		// Рё СЃСЂР°Р·Сѓ РІРѕР·РІСЂР°С‰Р°РµРј С€Р°СЂ РЅР° РїСЂР°РІРёР»СЊРЅСѓСЋ РїРѕР·РёС†РёСЋ
 		ball.setPosition({ position_.x + stickOffsetX_,
 						   ball.getPosition().y });
 	}

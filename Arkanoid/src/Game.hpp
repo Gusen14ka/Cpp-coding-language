@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include <SFML/Graphics.hpp>
 #include <vector>
@@ -6,8 +6,15 @@
 #include "entities/Ball.hpp"
 #include "entities/Paddle.hpp"
 #include "entities/Block.hpp"
-#include "entities/bonuses/Bonus.hpp"
+#include "entities/bonuses/ExpandPaddleBonus.hpp"
+#include "entities/bonuses/CompressPaddleBonus.hpp"
+#include "entities/bonuses/SlowBallBonus.hpp"
+#include "entities/bonuses/FastBallBonus.hpp"
+#include "entities/bonuses/StickyPaddleBonus.hpp"
+#include "entities/bonuses/OneTimeFloorBonus.hpp"
+#include "entities/bonuses/RandomBounceBonus.hpp"
 #include "ResourceHolder.hpp"
+#include "ui/Screen.hpp"
 #include "ui/StartScreen.hpp"
 #include "ui/EndScreen.hpp"
 #include "CollisionUtils.hpp"
@@ -32,40 +39,38 @@ public:
 
     int run();
 
-
+    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РѕРґРЅРѕСЂР°Р·РѕРІС‹Р№ РїРѕР» (РґР»СЏ Р±РѕРЅСѓСЃР°)
+    void activateOneTimeFloor();
 
 private:
     GameState state_;
     sf::RenderWindow window_;
     sf::Clock  clock_;
-    // прямоугольник для отрисовки пола
+    // РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё РїРѕР»Р°
     sf::RectangleShape floorShape_;
 
     Board board_;
     Ball ball_;
     Paddle paddle_;
-    std::vector<Bonus> bonuses_;
+    std::vector<std::unique_ptr<Bonus>> bonuses_;
 
-    StartScreen* startScreen_;
-    EndScreen* endScreen_;
+    std::unique_ptr<Screen> startScreen_;
+    std::unique_ptr<Screen> endScreen_;
 
     int score_ = 0;
     int lives_ = 3;
     bool oneTimefloorActive_ = false;
     
-    // Запущен ли шар после смерти/начала игры
+    // Р—Р°РїСѓС‰РµРЅ Р»Рё С€Р°СЂ РїРѕСЃР»Рµ СЃРјРµСЂС‚Рё/РЅР°С‡Р°Р»Р° РёРіСЂС‹
     bool ballFirstLaunched_ = false;
 
-    // Сработали ли коллизия с платформой недавно
+    // РЎСЂР°Р±РѕС‚Р°Р»Рё Р»Рё РєРѕР»Р»РёР·РёСЏ СЃ РїР»Р°С‚С„РѕСЂРјРѕР№ РЅРµРґР°РІРЅРѕ
     bool paddleCollisionLastFrame_ = false;
 
     void processInput();
     void updateSate(float dt);
     void render();
 
-    // Применяет бонусы
-    void applyBonus(const BonusType& type);
-
-    // Инициализирует "пол" для соответствующего бонуса
+    // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ "РїРѕР»" РґР»СЏ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРіРѕ Р±РѕРЅСѓСЃР°
     void initFloor();
 };
